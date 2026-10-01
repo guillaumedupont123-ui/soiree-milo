@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ce soir, tu choisis</title>
+<style>
+  :root { --ink:#1b1714; --cream:#f7f0e6; --gold:#e7b56a; --rose:#d4656c; --sea:#1d4e56; }
+  * { box-sizing:border-box; }
+  html, body { margin:0; min-height:100%; }
+  body {
+    font-family: Georgia, "Iowan Old Style", Palatino, serif;
+    color:#f6efe6;
+    background:#102027;
+  }
+  .sky {
+    position:fixed; inset:0; z-index:0;
+    background:
+      radial-gradient(800px 420px at 20% 0%, rgba(255,186,120,.28), transparent 60%),
+      radial-gradient(600px 380px at 100% 10%, rgba(70,140,160,.35), transparent 55%),
+      linear-gradient(#243844, #122028 70%);
+    overflow:hidden;
+  }
+  .cloud {
+    position:absolute; background:rgba(255,255,255,.22); border-radius:40px;
+    filter:blur(1px); animation: drift 28s linear infinite;
+  }
+  .cloud:before, .cloud:after {
+    content:""; position:absolute; background:inherit; border-radius:50%;
+  }
+  .cloud:before { width:60%; height:140%; left:15%; top:-70%; }
+  .cloud:after { width:40%; height:110%; right:12%; top:-40%; }
+  .c1 { width:180px; height:46px; top:12%; left:-30%; animation-duration:34s; }
+  .c2 { width:120px; height:34px; top:22%; left:-20%; animation-duration:22s; animation-delay:-6s; }
+  .c3 { width:150px; height:40px; top:6%; left:30%; animation-duration:40s; }
+  @keyframes drift { to { transform:translateX(130vw); } }
+  .wrap { position:relative; z-index:2; max-width:720px; margin:0 auto; padding:22px 16px 48px; }
+  .top { display:flex; justify-content:space-between; align-items:center; font-family: system-ui, sans-serif; font-size:13px; letter-spacing:.12em; text-transform:uppercase; opacity:.8; }
+  .screen { display:none; }
+  .screen.on { display:block; animation:rise .45s ease; }
+  @keyframes rise { from { opacity:0; transform:translateY(16px);} to { opacity:1; transform:none; } }
+  h1 { font-weight:500; font-size:clamp(38px, 8vw, 64px); line-height:.95; margin:18px 0 10px; }
+  p.lead { font-family:system-ui,sans-serif; font-size:17px; line-height:1.45; color:#eadfce; max-width:36ch; }
+  button {
+    font-family:system-ui,sans-serif; cursor:pointer; border:0; border-radius:999px;
+    padding:14px 22px; font-size:16px; font-weight:650;
+  }
+  .cta { background:var(--cream); color:var(--ink); }
+  .cta:active { transform:scale(.98); }
+  .ghost { background:transparent; color:#f6efe6; border:1px solid rgba(255,255,255,.3); }
+  .row { display:flex; gap:10px; flex-wrap:wrap; margin-top:18px; }
+  .play {
+    position:relative; height:340px; margin-top:12px; border-radius:24px;
+    background:rgba(255,255,255,.05); border:1px solid rgba(255,255,255,.1); overflow:hidden;
+  }
+  .lantern {
+    position:absolute; width:54px; height:70px; cursor:pointer; animation:floaty 3.2s ease-in-out infinite;
+    filter:drop-shadow(0 8px 12px rgba(0,0,0,.35));
+  }
+  .lantern svg { width:54px; height:70px; }
+  @keyframes floaty {
+    0%,100% { transform:translateY(0); }
+    50% { transform:translateY(-12px); }
+  }
+  .score {
+    position:absolute; left:14px; top:14px; font-family:system-ui,sans-serif;
+    background:rgba(0,0,0,.28); border-radius:999px; padding:6px 12px;
+  }
+  .cards { display:grid; gap:12px; margin-top:14px; }
+  .card {
+    text-align:left; width:100%; border-radius:18px; padding:16px 16px 14px;
+    background:rgba(255,250,244,.1); color:#f7f1e8; border:1px solid rgba(255,255,255,.14);
+    display:grid; grid-template-columns:64px 1fr; gap:12px; align-items:center;
+  }
+  .card.picked { outline:3px solid var(--gold); background:rgba(231,181,106,.16); }
+  .ico { width:64px; height:64px; border-radius:16px; display:grid; place-items:center; background:rgba(255,255,255,.08); }
+  .card h3 { margin:0 0 4px; font-size:22px; font-weight:500; }
+  .card p { margin:0; font-family:system-ui,sans-serif; font-size:14px; color:#eadfce; }
+  .ticket {
+    background:var(--cream); color:var(--ink); border-radius:22px; padding:22px 20px 20px;
+    position:relative; overflow:hidden; animation:pop .5s ease;
+  }
+  @keyframes pop { from { transform:scale(.92); opacity:0;} to { transform:none; opacity:1;} }
+  .ticket h2 { margin:6px 0 8px; font-size:34px; font-weight:500; }
+  .kicker { font-family:system-ui,sans-serif; letter-spacing:.16em; text-transform:uppercase; font-size:11px; color:#1d4e56; }
+  .meta { display:flex; gap:18px; font-family:system-ui,sans-serif; font-size:14px; }
+  .meta b { display:block; font-size:18px; }
+  .dash { border-top:1px dashed #c9b79d; margin:14px 0; }
+  .stamp {
+    position:absolute; right:16px; top:16px; width:84px; height:84px; border:3px solid var(--rose); color:var(--rose);
+    border-radius:50%; display:grid; place-items:center; text-align:center; font-family:system-ui,sans-serif;
+    font-size:12px; letter-spacing:.08em; text-transform:uppercase; transform:rotate(-12deg);
+  }
+  .bits { position:fixed; inset:0; pointer-events:none; z-index:5; }
+  .bit { position:absolute; top:-10px; width:8px; height:12px; animation:fall linear forwards; }
+  @keyframes fall { to { transform:translateY(100vh) rotate(300deg); } }
+  .hint { font-family:system-ui,sans-serif; color:#eadfce; }
+</style>
+</head>
+<body>
+<div class="sky">
+  <div class="cloud c1"></div>
+  <div class="cloud c2"></div>
+  <div class="cloud c3"></div>
+</div>
+<div class="bits" id="bits"></div>
+<div class="wrap">
+  <div class="top"><span>Cagnes-sur-Mer</span><span>Vendredi 2 octobre</span></div>
+
+  <section class="screen on" id="s0">
+    <h1>Le ciel est gris.<br>La soirée, non.</h1>
+    <p class="lead">Un petit jeu, puis tu choisis l’activité. Rendez-vous déjà calé : demain, 19 h.</p>
+    <p class="hint">Ouvre ce fichier dans Chrome ou Safari. L’aperçu Fichiers ne lance pas le jeu.</p>
+    <div class="row"><button class="cta" id="start" type="button" onclick="window.startGame && window.startGame()">Commencer le jeu</button></div>
+  </section>
+
+  <section class="screen" id="s1">
+    <h1>Allume 5 lanternes</h1>
+    <p class="hint">Touche les lanternes qui passent. Chacune débloque un bout de la soirée.</p>
+    <div class="play" id="play">
+      <div class="score" id="score">0 / 5</div>
+    </div>
+  </section>
+
+  <section class="screen" id="s2">
+    <h1>À toi de choisir</h1>
+    <p class="hint">Demain, 19 h. Une seule activité. Celle qui te fait le plus envie.</p>
+    <div class="cards" id="cards"></div>
+    <div class="row">
+      <button class="ghost" id="back" type="button">Rejouer</button>
+      <button class="cta" id="lock" type="button" disabled>Je choisis celle-là</button>
+    </div>
+  </section>
+
+  <section class="screen" id="s3">
+    <div class="ticket" id="ticket"></div>
+    <div class="row">
+      <button class="ghost" id="again" type="button">Changer d’avis</button>
+    </div>
+  </section>
+</div>
+<script>
+(function () {
+  var ideas = [
+    { id: "picnic", title: "Pique-nique sur la plage", text: "Couverture, encas, et la mer de Cagnes.", svg: picnicSvg() },
+    { id: "bowling", title: "Bowling", text: "Speed Park, une piste, et le droit de rire des gouttières.", svg: ballSvg() },
+    { id: "cine", title: "Ciné", text: "Une salle, un film, du pop-corn. Tu choisis le film.", svg: cineSvg() },
+    { id: "hauts", title: "Apéro et dîner dans les hauts", text: "Haut-de-Cagnes, verre puis table, ruelles et château.", svg: lanternSvg("#e7b56a") },
+    { id: "escape", title: "Escape game", text: "Énigmes à deux. On sort avant la fin du temps, ou pas.", svg: keySvg() },
+    { id: "chef", title: "La cuisine du papa de Milo", text: "Venir tester la cuisine du chef étoilé, le papa de Milo.", svg: chefSvg() }
+  ];
+  var caught = 0;
+  var chosen = null;
+  var timer = null;
+
+  function show(id) {
+    var screens = document.querySelectorAll(".screen");
+    for (var i = 0; i < screens.length; i++) {
+      screens[i].classList.toggle("on", screens[i].id === id);
+    }
+    window.scrollTo(0, 0);
+  }
+
+  function lanternSvg(color) {
+    return '<svg viewBox="0 0 64 80" aria-hidden="true"><path d="M32 6 v10" stroke="' + color + '" stroke-width="3"/><rect x="22" y="16" width="20" height="8" rx="2" fill="' + color + '"/><path d="M18 26 h28 l-4 36 h-20 z" fill="' + color + '" opacity=".9"/><rect x="24" y="62" width="16" height="6" rx="2" fill="' + color + '"/></svg>';
+  }
+  function keySvg() {
+    return '<svg viewBox="0 0 64 64" aria-hidden="true"><circle cx="24" cy="28" r="12" fill="none" stroke="#e7b56a" stroke-width="4"/><path d="M34 28 h22 M48 28 v8 M56 28 v6" stroke="#e7b56a" stroke-width="4" fill="none"/></svg>';
+  }
+  function boatSvg() {
+    return '<svg viewBox="0 0 64 64" aria-hidden="true"><path d="M8 40 h48 l-6 10 H16 z" fill="#7ec8c3"/><path d="M32 12 v28" stroke="#f6efe6" stroke-width="3"/><path d="M32 16 l16 16 H32 z" fill="#e7b56a"/></svg>';
+  }
+  function chefSvg() {
+    return '<svg viewBox="0 0 64 64" aria-hidden="true"><path d="M18 28 h28 v16 a6 6 0 0 1 -6 6 H24 a6 6 0 0 1 -6 -6 z" fill="#e7b56a"/><path d="M22 28 c0 -10 6 -16 10 -16 s10 6 10 16" fill="none" stroke="#f6efe6" stroke-width="3"/><path d="M32 8 v6" stroke="#d4656c" stroke-width="3"/></svg>';
+  }
+  function picnicSvg() {
+    return '<svg viewBox="0 0 64 64" aria-hidden="true"><path d="M8 40 h48 l-6 8 H14 z" fill="#7ec8c3"/><path d="M16 40 q16 -16 32 0" fill="#e7b56a"/><circle cx="32" cy="30" r="4" fill="#d4656c"/></svg>';
+  }
+  function cineSvg() {
+    return '<svg viewBox="0 0 64 64" aria-hidden="true"><rect x="10" y="16" width="44" height="32" rx="4" fill="#1d4e56"/><path d="M28 24 l14 8 -14 8 z" fill="#e7b56a"/></svg>';
+  }
+  function ballSvg() {
+    return '<svg viewBox="0 0 64 64" aria-hidden="true"><circle cx="32" cy="32" r="18" fill="#d4656c"/><circle cx="26" cy="28" r="3" fill="#f6efe6"/><circle cx="34" cy="34" r="3" fill="#f6efe6"/><circle cx="28" cy="40" r="3" fill="#f6efe6"/></svg>';
+  }
+
+  function burst() {
+    var root = document.getElementById("bits");
+    root.innerHTML = "";
+    var colors = ["#e7b56a", "#f7f0e6", "#d4656c", "#7ec8c3"];
+    for (var i = 0; i < 50; i++) {
+      var b = document.createElement("i");
+      b.className = "bit";
+      b.style.left = (Math.random() * 100) + "%";
+      b.style.background = colors[i % 4];
+      b.style.animationDuration = (1.6 + Math.random()) + "s";
+      root.appendChild(b);
+    }
+    setTimeout(function () { root.innerHTML = ""; }, 2800);
+  }
+
+  function spawn() {
+    if (caught >= 5) return;
+    var box = document.getElementById("play");
+    var el = document.createElement("button");
+    el.type = "button";
+    el.className = "lantern";
+    el.innerHTML = lanternSvg("#ffd27a");
+    el.style.left = (8 + Math.random() * 76) + "%";
+    el.style.top = (18 + Math.random() * 62) + "%";
+    el.style.animationDelay = (-Math.random()) + "s";
+    el.addEventListener("click", function () {
+      if (el.dataset.hit) return;
+      el.dataset.hit = "1";
+      caught += 1;
+      document.getElementById("score").textContent = caught + " / 5";
+      el.style.transform = "scale(1.3)";
+      el.style.opacity = "0";
+      setTimeout(function () { if (el.parentNode) el.parentNode.removeChild(el); }, 180);
+      if (caught >= 5) {
+        clearInterval(timer);
+        burst();
+        setTimeout(function () { show("s2"); }, 500);
+      }
+    });
+    box.appendChild(el);
+    setTimeout(function () { if (el.parentNode && !el.dataset.hit) el.parentNode.removeChild(el); }, 2600);
+  }
+
+  function startGame() {
+    caught = 0;
+    chosen = null;
+    document.getElementById("score").textContent = "0 / 5";
+    var box = document.getElementById("play");
+    var score = document.getElementById("score");
+    box.innerHTML = "";
+    box.appendChild(score);
+    show("s1");
+    clearInterval(timer);
+    spawn();
+    timer = setInterval(spawn, 700);
+  }
+
+  function renderCards() {
+    var root = document.getElementById("cards");
+    root.innerHTML = "";
+    document.getElementById("lock").disabled = true;
+    ideas.forEach(function (idea) {
+      var b = document.createElement("button");
+      b.type = "button";
+      b.className = "card";
+      b.innerHTML = '<div class="ico"></div><div><h3></h3><p></p></div>';
+      b.querySelector(".ico").innerHTML = idea.svg;
+      b.querySelector("h3").textContent = idea.title;
+      b.querySelector("p").textContent = idea.text;
+      b.addEventListener("click", function () {
+        chosen = idea;
+        var all = root.querySelectorAll(".card");
+        for (var i = 0; i < all.length; i++) all[i].classList.remove("picked");
+        b.classList.add("picked");
+        document.getElementById("lock").disabled = false;
+      });
+      root.appendChild(b);
+    });
+  }
+
+  function confirmChoice() {
+    if (!chosen) return;
+    var t = document.getElementById("ticket");
+    t.innerHTML = "";
+    var stamp = document.createElement("div");
+    stamp.className = "stamp";
+    stamp.innerHTML = "C'est<br>note";
+    var k = document.createElement("div");
+    k.className = "kicker";
+    k.textContent = "Billet pour deux";
+    var h = document.createElement("h2");
+    h.textContent = chosen.title;
+    var meta = document.createElement("div");
+    meta.className = "meta";
+    meta.innerHTML = "<div>Quand<b>Vendredi 2 octobre</b></div><div>Heure<b>19 h 00</b></div><div>Ou<b>Cagnes</b></div>";
+    var dash = document.createElement("div");
+    dash.className = "dash";
+    var p = document.createElement("p");
+    p.textContent = chosen.text;
+    var bonus = document.createElement("p");
+    bonus.textContent = "Bonus de fin de soirée : présentation de Milo 🐈";
+    t.appendChild(stamp);
+    t.appendChild(k);
+    t.appendChild(h);
+    t.appendChild(meta);
+    t.appendChild(dash);
+    t.appendChild(p);
+    t.appendChild(bonus);
+    show("s3");
+    burst();
+    try { localStorage.setItem("date-cagnes-19h", chosen.id); } catch (e) {}
+    notifyChoice(chosen);
+  }
+
+  function notifyChoice(idea) {
+    var topic = "cagnes-date-milo-7k3p9q";
+    var body = "Elle a choisi : " + idea.title + ". Demain 19 h, Cagnes-sur-Mer. " + idea.text + " Bonus : presentation de Milo.";
+    var status = document.getElementById("sendstatus");
+    if (!status) {
+      status = document.createElement("p");
+      status.id = "sendstatus";
+      status.className = "hint";
+      document.getElementById("s3").appendChild(status);
+    }
+    status.textContent = "Envoi de ta reponse...";
+    fetch("https://ntfy.sh/" + topic, {
+      method: "POST",
+      mode: "no-cors",
+      body: body,
+      headers: { "Content-Type": "text/plain;charset=UTF-8" }
+    }).then(function () {
+      status.textContent = "C'est envoye. Il est prevenu.";
+    }).catch(function () {
+      status.textContent = "Pas envoye. Montre-lui le billet.";
+    });
+  }
+
+  window.startGame = startGame;
+  document.getElementById("start").addEventListener("click", startGame);
+  document.getElementById("back").addEventListener("click", startGame);
+  document.getElementById("lock").addEventListener("click", confirmChoice);
+  document.getElementById("again").addEventListener("click", function () {
+    renderCards();
+    show("s2");
+  });
+  renderCards();
+})();
+</script>
+</body>
+</html>
